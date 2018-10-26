@@ -174,9 +174,11 @@ final class UnixPath implements CharSequence {
     }
 
     /**
-     * Returns root component if an absolute path, otherwise {@code null}.
+     * Returns root component if an absolute path, otherwise {@code null}. Note the returned {@code UnixPath} will
+     * always return true for {@code isRoot}.
      *
      * @see java.nio.file.Path#getRoot()
+     * @see UnixPath#isRoot()
      */
     public UnixPath getRoot() {
         return isAbsolute() ? ROOT_PATH : null;
