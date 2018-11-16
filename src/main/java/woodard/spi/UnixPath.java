@@ -23,8 +23,8 @@ import static com.google.common.base.Preconditions.checkArgument;
  * <a href="http://docs.oracle.com/javase/tutorial/i18n/text/supplementaryChars.html">Supplementary
  * Characters as Surrogates</a>.
  */
+// codebeat:disable[TOO_MANY_FUNCTIONS]
 final class UnixPath implements CharSequence {
-
     public static final char DOT = '.';
     public static final char SEPARATOR = '/';
     public static final String ROOT = "" + SEPARATOR;
@@ -510,3 +510,4 @@ final class UnixPath implements CharSequence {
         return Arrays.asList(arr);
     }
 }
+// codebeat:enable[TOO_MANY_FUNCTIONS]
