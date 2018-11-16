@@ -6,7 +6,6 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.PeekingIterator;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -318,32 +317,31 @@ final class UnixPath implements CharSequence {
      * @see java.nio.file.Path#relativize(java.nio.file.Path)
      */
     public UnixPath relativize(UnixPath other) {
+        //split 321 to 348 into smaller units
         if (path.isEmpty()) {
             return other;
         }
         PeekingIterator<String> left = Iterators.peekingIterator(split());
         PeekingIterator<String> right = Iterators.peekingIterator(other.split());
+        similarityCheck(left, right);
+        // end of block for finding similarities
+        // begin next block of building our string-to-be-returned
+        StringBuilder result = new StringBuilder(path.length() + other.path.length());
+        UnixPathUtil.appendToPath(other, left, right, result);
+        return new UnixPath(result.toString());
+    }
+
+    /**
+     * Checking if paths are the same
+     */
+    private void similarityCheck(PeekingIterator<String> left, PeekingIterator<String> right) {
         while (left.hasNext() && right.hasNext()) {
-            if (!left.peek().equals(right.peek())) {
+            if (!  left.peek().equals( right.peek() )  ) {
                 break;
             }
             left.next();
             right.next();
         }
-        StringBuilder result = new StringBuilder(path.length() + other.path.length());
-        while (left.hasNext()) {
-            result.append(PARENT_DIR);
-            result.append(SEPARATOR);
-            left.next();
-        }
-        while (right.hasNext()) {
-            result.append(right.next());
-            result.append(SEPARATOR);
-        }
-        if (result.length() > 0 && !other.hasTrailingSeparator()) {
-            result.deleteCharAt(result.length() - 1);
-        }
-        return new UnixPath(result.toString());
     }
 
     /**
