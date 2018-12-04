@@ -6,3 +6,5 @@
 
 * `mvn compile` - Build Woodard.
 * `mvn test` - Run tests.
+
+Code formatting is automatically done when running mvn
