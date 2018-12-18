@@ -1,4 +1,4 @@
-package woodard.spi;
+package alfre.v0.spi;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,12 +11,12 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.Iterator;
 
-public class CloudNioPath implements Path {
+public class CloudPath implements Path {
   private String host;
   private UnixPath unixPath;
   private FileSystem fileSystem;
 
-  CloudNioPath(String host, UnixPath unixPath, FileSystem fileSystem) {
+  CloudPath(String host, UnixPath unixPath, FileSystem fileSystem) {
     this.host = host;
     this.unixPath = unixPath;
     this.fileSystem = fileSystem;
@@ -39,8 +39,8 @@ public class CloudNioPath implements Path {
 
   @Override
   public Path getRoot() {
-    CloudNioPath rootCloudPath;
-    rootCloudPath = new CloudNioPath(this.host, this.unixPath.getRoot(), this.fileSystem);
+    CloudPath rootCloudPath;
+    rootCloudPath = new CloudPath(this.host, this.unixPath.getRoot(), this.fileSystem);
     return rootCloudPath;
   }
 
@@ -96,8 +96,8 @@ public class CloudNioPath implements Path {
 
   @Override
   public Path resolve(Path other) {
-    CloudNioPath otherCloudPath = (CloudNioPath) other;
-    return new CloudNioPath(
+    CloudPath otherCloudPath = (CloudPath) other;
+    return new CloudPath(
         this.host, this.unixPath.resolve(otherCloudPath.unixPath), this.fileSystem);
   }
 
@@ -161,9 +161,9 @@ public class CloudNioPath implements Path {
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;
-    if (!(o instanceof CloudNioPath)) return false;
+    if (!(o instanceof CloudPath)) return false;
 
-    CloudNioPath paths = (CloudNioPath) o;
+    CloudPath paths = (CloudPath) o;
 
     if (host != null ? !host.equals(paths.host) : paths.host != null) return false;
     if (unixPath != null ? !unixPath.equals(paths.unixPath) : paths.unixPath != null) return false;
@@ -180,7 +180,7 @@ public class CloudNioPath implements Path {
 
   @Override
   public String toString() {
-    return "CloudNioPath{"
+    return "CloudPath{"
         + "host='"
         + host
         + '\''

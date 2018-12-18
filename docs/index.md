@@ -1,10 +1,10 @@
-# Welcome to Woodard
+# Welcome to Alfre
 
-![woodard headshot](images/woodard.jpeg)
+![alfre headshot](images/alfre.jpeg)
 
 ## Commands
 
-* `mvn compile` - Build Woodard.
+* `mvn compile` - Build Alfre.
 * `mvn test` - Run tests.
 
 Code formatting is automatically done when running mvn

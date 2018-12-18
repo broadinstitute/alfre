@@ -1,15 +1,8 @@
-package woodard.spi;
+package alfre.v0.spi;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.PeekingIterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -27,7 +20,7 @@ import java.util.Objects;
  * href="http://docs.oracle.com/javase/tutorial/i18n/text/supplementaryChars.html">Supplementary
  * Characters as Surrogates</a>.
  */
-// codebeat:disable[TOO_MANY_FUNCTIONS]
+@SuppressWarnings({"WeakerAccess", "unused"})
 final class UnixPath implements CharSequence {
   public static final char DOT = '.';
   public static final char SEPARATOR = '/';
@@ -37,20 +30,16 @@ final class UnixPath implements CharSequence {
   public static final UnixPath EMPTY_PATH = new UnixPath("");
   public static final UnixPath ROOT_PATH = new UnixPath(ROOT);
 
-  /*private static final Splitter SPLITTER = Splitter.on(SEPARATOR).omitEmptyStrings();
-  private static final Splitter SPLITTER_PERMIT_EMPTY_COMPONENTS = Splitter.on(SEPARATOR);
-  private static final Joiner JOINER = Joiner.on(SEPARATOR);*/
-  private static final Ordering<Iterable<String>> ORDERING = Ordering.natural().lexicographical();
-
   private final String path;
-  private List<String> lazyStringParts;
+  private List<String> lazyParts;
+  private List<String> lazyReverseParts;
 
   private UnixPath(String path) {
     this.path = path;
   }
 
   /** Returns new path of {@code first}. */
-  public static UnixPath getPath(String path) {
+  public static UnixPath getPath(final String path) {
     if (path.isEmpty()) {
       return EMPTY_PATH;
     } else if (isRootInternal(path)) {
@@ -66,26 +55,26 @@ final class UnixPath implements CharSequence {
    * @see #resolve(UnixPath)
    * @see java.nio.file.FileSystem#getPath(String, String...)
    */
-  public static UnixPath getPath(String first, String... more) {
+  public static UnixPath getPath(final String first, final String... more) {
     if (more.length == 0) {
       return getPath(first);
     }
-    StringBuilder builder = new StringBuilder(first);
+    final StringBuilder builder = new StringBuilder(first);
     for (int i = 0; i < more.length; i++) {
-      String part = more[i];
-      if (part.isEmpty()) {
-        continue;
-      } else if (isAbsoluteInternal(part)) {
-        if (i == more.length - 1) {
-          return new UnixPath(part);
+      final String part = more[i];
+      if (!part.isEmpty()) {
+        if (isAbsoluteInternal(part)) {
+          if (i == more.length - 1) {
+            return new UnixPath(part);
+          } else {
+            builder.replace(0, builder.length(), part);
+          }
+        } else if (hasTrailingSeparatorInternal(builder)) {
+          builder.append(part);
         } else {
-          builder.replace(0, builder.length(), part);
+          builder.append(SEPARATOR);
+          builder.append(part);
         }
-      } else if (hasTrailingSeparatorInternal(builder)) {
-        builder.append(part);
-      } else {
-        builder.append(SEPARATOR);
-        builder.append(part);
       }
     }
     return new UnixPath(builder.toString());
@@ -120,11 +109,11 @@ final class UnixPath implements CharSequence {
 
   /** Returns {@code true} if path ends with a trailing slash, or would after normalization. */
   public boolean seemsLikeADirectory() {
-    int length = path.length();
+    final int length = path.length();
     return path.isEmpty()
         || path.charAt(length - 1) == SEPARATOR
-        || path.endsWith(".") && (length == 1 || path.charAt(length - 2) == SEPARATOR)
-        || path.endsWith("..") && (length == 2 || path.charAt(length - 3) == SEPARATOR);
+        || path.endsWith(CURRENT_DIR) && (length == 1 || path.charAt(length - 2) == SEPARATOR)
+        || path.endsWith(PARENT_DIR) && (length == 2 || path.charAt(length - 3) == SEPARATOR);
   }
 
   /**
@@ -138,8 +127,8 @@ final class UnixPath implements CharSequence {
     } else if (isRoot()) {
       return null;
     } else {
-      List<String> parts = getParts();
-      String last = parts.get(parts.size() - 1);
+      final List<String> parts = getParts();
+      final String last = parts.get(parts.size() - 1);
       return parts.size() == 1 && path.equals(last) ? this : new UnixPath(last);
     }
   }
@@ -189,7 +178,7 @@ final class UnixPath implements CharSequence {
       throw new IllegalArgumentException("begin index or end index is invalid");
     }
 
-    List<String> subList;
+    final List<String> subList;
     try {
       subList = getParts().subList(beginIndex, endIndex);
     } catch (IndexOutOfBoundsException e) {
@@ -299,7 +288,7 @@ final class UnixPath implements CharSequence {
    */
   public UnixPath resolveSibling(UnixPath other) {
     Objects.requireNonNull(other);
-    UnixPath parent = getParent();
+    final UnixPath parent = getParent();
     return parent == null ? other : parent.resolve(other);
   }
 
@@ -309,29 +298,37 @@ final class UnixPath implements CharSequence {
    * @see java.nio.file.Path#relativize(java.nio.file.Path)
    */
   public UnixPath relativize(UnixPath other) {
-    // split 321 to 348 into smaller units
     if (path.isEmpty()) {
       return other;
     }
-    PeekingIterator<String> left = Iterators.peekingIterator(split());
-    PeekingIterator<String> right = Iterators.peekingIterator(other.split());
-    similarityCheck(left, right);
-    // end of block for finding similarities
-    // begin next block of building our string-to-be-returned
-    StringBuilder result = new StringBuilder(path.length() + other.path.length());
-    UnixPathUtil.appendToPath(other, left, right, result);
-    return new UnixPath(result.toString());
-  }
-
-  /** Checking if paths are the same */
-  private void similarityCheck(PeekingIterator<String> left, PeekingIterator<String> right) {
-    while (left.hasNext() && right.hasNext()) {
-      if (!left.peek().equals(right.peek())) {
+    final List<String> leftParts = getParts();
+    final List<String> rightParts = other.getParts();
+    final int leftSize = leftParts.size();
+    final int rightSize = rightParts.size();
+    int leftIndex = 0;
+    int rightIndex = 0;
+    while (leftIndex < leftSize && rightIndex < rightSize) {
+      if (!Objects.equals(leftParts.get(leftIndex), rightParts.get(rightIndex))) {
         break;
       }
-      left.next();
-      right.next();
+      leftIndex++;
+      rightIndex++;
     }
+    StringBuilder result = new StringBuilder(path.length() + other.path.length());
+    while (leftIndex < leftSize) {
+      result.append(UnixPath.PARENT_DIR);
+      result.append(UnixPath.SEPARATOR);
+      leftIndex++;
+    }
+    while (rightIndex < rightSize) {
+      result.append(rightParts.get(rightIndex));
+      result.append(UnixPath.SEPARATOR);
+      rightIndex++;
+    }
+    if (result.length() > 0 && !other.hasTrailingSeparator()) {
+      result.deleteCharAt(result.length() - 1);
+    }
+    return new UnixPath(result.toString());
   }
 
   /**
@@ -349,14 +346,21 @@ final class UnixPath implements CharSequence {
     } else if (!me.path.isEmpty() && other.path.isEmpty()) {
       return false;
     }
-    return startsWith(split(), other.split());
+    return startsWith(getParts(), other.getParts());
   }
 
-  private static boolean startsWith(Iterator<String> lefts, Iterator<String> rights) {
-    while (rights.hasNext()) {
-      if (!lefts.hasNext() || !rights.next().equals(lefts.next())) {
+  private static boolean startsWith(List<String> lefts, List<String> rights) {
+    int rightIndex = 0;
+    int leftIndex = 0;
+    final int leftSize = lefts.size();
+    final int rightSize = rights.size();
+    while (rightIndex < rightSize) {
+      if (!(leftIndex < leftSize)
+          || !Objects.equals(rights.get(rightIndex), lefts.get(leftIndex))) {
         return false;
       }
+      leftIndex++;
+      rightIndex++;
     }
     return true;
   }
@@ -376,7 +380,7 @@ final class UnixPath implements CharSequence {
     } else if (other.isAbsolute()) {
       return me.isAbsolute() && me.path.equals(other.path);
     }
-    return startsWith(me.splitReverse(), other.splitReverse());
+    return startsWith(me.getReverseParts(), other.getReverseParts());
   }
 
   /**
@@ -385,12 +389,11 @@ final class UnixPath implements CharSequence {
    * @see java.nio.file.Path#compareTo(java.nio.file.Path)
    */
   public int compareTo(UnixPath other) {
-    return ORDERING.compare(getParts(), other.getParts());
+    return this.path.compareTo(other.path);
   }
 
   /** Converts relative path to an absolute path. */
   public UnixPath toAbsolutePath(UnixPath currentWorkingDirectory) {
-    checkArgument(currentWorkingDirectory.isAbsolute());
     return isAbsolute() ? this : currentWorkingDirectory.resolve(this);
   }
 
@@ -416,16 +419,6 @@ final class UnixPath implements CharSequence {
     } else {
       return this;
     }
-  }
-
-  /** Splits path into components, excluding separators and empty strings. */
-  public Iterator<String> split() {
-    return getParts().iterator();
-  }
-
-  /** Splits path into components in reverse, excluding separators and empty strings. */
-  public Iterator<String> splitReverse() {
-    return Lists.reverse(getParts()).iterator();
   }
 
   @Override
@@ -466,18 +459,33 @@ final class UnixPath implements CharSequence {
 
   /** Returns list of path components, excluding slashes. */
   private List<String> getParts() {
-    List<String> result = lazyStringParts;
-    return result != null
-        ? result
-        : (lazyStringParts =
-            path.isEmpty() || isRoot() ? Collections.<String>emptyList() : createParts());
+    if (lazyParts == null) {
+      if (path.isEmpty() || isRoot()) {
+        lazyParts = Collections.emptyList();
+      } else {
+        lazyParts = Collections.unmodifiableList(createParts());
+      }
+    }
+    return lazyParts;
+  }
+
+  /** Returns list of path components reversed, excluding slashes. */
+  private List<String> getReverseParts() {
+    if (lazyReverseParts == null) {
+      if (path.isEmpty() || isRoot()) {
+        lazyReverseParts = Collections.emptyList();
+      } else {
+        final List<String> parts = createParts();
+        Collections.reverse(parts);
+        lazyReverseParts = Collections.unmodifiableList(parts);
+      }
+    }
+    return lazyReverseParts;
   }
 
   private List<String> createParts() {
-
-    String str = path.charAt(0) == SEPARATOR ? path.substring(1) : path;
-    String[] arr = str.split("" + SEPARATOR);
+    final String str = path.charAt(0) == SEPARATOR ? path.substring(1) : path;
+    final String[] arr = str.split("" + SEPARATOR);
     return Arrays.asList(arr);
   }
 }
-// codebeat:enable[TOO_MANY_FUNCTIONS]

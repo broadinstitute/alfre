@@ -1,4 +1,4 @@
-package woodard.spi;
+package alfre.v0.spi;
 
 import java.io.IOException;
 import java.net.URI;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class CloudNioFileSystemProvider extends FileSystemProvider {
+public class CloudFileSystemProvider extends FileSystemProvider {
   @Override
   public String getScheme() {
     Map<String, String> address;
@@ -75,7 +75,7 @@ public class CloudNioFileSystemProvider extends FileSystemProvider {
 
   @Override
   public String toString() {
-    return "CloudNioFileSystemProvider{}" + super.toString();
+    return "CloudFileSystemProvider{}" + super.toString();
   }
 
   @Override

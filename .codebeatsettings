@@ -1,6 +1,0 @@
-{
-  "JAVA": {
-    "TOO_MANY_FUNCTIONS": [150, 200, 250, 300],
-    "TOTAL_COMPLEXITY": [200, 280, 360, 420]
-  }
-}
