@@ -1,2 +1,2 @@
-This is the beginning of the woodard project.  
-[link to the project](https://github.com/shirinhunold/woodard)
+This is the beginning of the alfre project.  
+[link to the project](https://github.com/broadinstitute/alfre)

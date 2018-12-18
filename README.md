@@ -1,12 +1,8 @@
- Woodard 
+ Alfre 
 --------
-[![Build Status](https://travis-ci.com/shirinhunold/woodard.svg?branch=master)](https://travis-ci.com/shirinhunold/woodard)
-[![codebeat badge](https://codebeat.co/badges/08c47cfd-7bcf-4bdd-be5f-d898fbe468fc)](https://codebeat.co/projects/github-com-shirinhunold-woodard-master)
-[![codecov](https://codecov.io/gh/shirinhunold/woodard/branch/master/graph/badge.svg)](https://codecov.io/gh/shirinhunold/woodard)
-[![Known Vulnerabilities](https://snyk.io/test/github/shirinhunold/woodard/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/shirinhunold/woodard?targetFile=pom.xml)
+[![Build Status](https://travis-ci.com/broadinstitute/alfre.svg?branch=master)](https://travis-ci.com/broadinstitute/alfre)
+[![codecov](https://codecov.io/gh/broadinstitute/alfre/branch/master/graph/badge.svg)](https://codecov.io/gh/broadinstitute/alfre)
+[![Known Vulnerabilities](https://snyk.io/test/github/broadinstitute/alfre/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/broadinstitute/alfre?targetFile=pom.xml)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b59a009fd812413a949810277aa14972)](https://www.codacy.com/app/kshakir/alfre)
 
-More docs available at [shirinwoodard.readthedocs.io](https://shirinwoodard.readthedocs.io)
-
-
-
-
+More docs available at [alfre.readthedocs.io](https://alfre.readthedocs.io)
