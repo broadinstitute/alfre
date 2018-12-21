@@ -103,6 +103,38 @@
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.0.0</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.15</version>
+          </dependency>
+          <dependency>
+            <groupId>org.broadinstitute</groupId>
+            <artifactId>alfre-v0-bom</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>checkstyle</id>
+            <phase>test</phase>
+            <configuration>
+              <logViolationsToConsole>true</logViolationsToConsole>
+              <includeTestSourceDirectory>true</includeTestSourceDirectory>
+              <configLocation>alfre_checks.xml</configLocation>
+              <violationSeverity>info</violationSeverity>
+            </configuration>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.1</version>
         <executions>

@@ -1,3 +1,21 @@
+/*
+ * Original Copyright 2016 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Via: https://github.com/GoogleCloudPlatform/google-cloud-java/blob/fad70bdfdbc88e5c2ddf13be7085a7e9963f66c8/google-cloud-clients/google-cloud-contrib/google-cloud-nio/src/main/java/com/google/cloud/storage/contrib/nio/UnixPath.java
+ */
+
 package alfre.v0.spi;
 
 import java.util.ArrayList;
@@ -22,11 +40,12 @@ import java.util.Objects;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 final class UnixPath implements CharSequence {
+
   public static final char DOT = '.';
   public static final char SEPARATOR = '/';
-  public static final String ROOT = "" + SEPARATOR;
-  public static final String CURRENT_DIR = "" + DOT;
-  public static final String PARENT_DIR = "" + DOT + DOT;
+  public static final String ROOT = "/";
+  public static final String CURRENT_DIR = ".";
+  public static final String PARENT_DIR = "..";
   public static final UnixPath EMPTY_PATH = new UnixPath("");
   public static final UnixPath ROOT_PATH = new UnixPath(ROOT);
 
@@ -34,7 +53,7 @@ final class UnixPath implements CharSequence {
   private List<String> lazyParts;
   private List<String> lazyReverseParts;
 
-  private UnixPath(String path) {
+  private UnixPath(final String path) {
     this.path = path;
   }
 
@@ -85,7 +104,7 @@ final class UnixPath implements CharSequence {
     return isRootInternal(path);
   }
 
-  private static boolean isRootInternal(String path) {
+  private static boolean isRootInternal(final String path) {
     return path.length() == 1 && path.charAt(0) == SEPARATOR;
   }
 
@@ -94,7 +113,7 @@ final class UnixPath implements CharSequence {
     return isAbsoluteInternal(path);
   }
 
-  private static boolean isAbsoluteInternal(String path) {
+  private static boolean isAbsoluteInternal(final String path) {
     return !path.isEmpty() && path.charAt(0) == SEPARATOR;
   }
 
@@ -103,7 +122,7 @@ final class UnixPath implements CharSequence {
     return hasTrailingSeparatorInternal(path);
   }
 
-  private static boolean hasTrailingSeparatorInternal(CharSequence path) {
+  private static boolean hasTrailingSeparatorInternal(final CharSequence path) {
     return path.length() != 0 && path.charAt(path.length() - 1) == SEPARATOR;
   }
 
@@ -142,7 +161,7 @@ final class UnixPath implements CharSequence {
     if (path.isEmpty() || isRoot()) {
       return null;
     }
-    int index =
+    final int index =
         hasTrailingSeparator()
             ? path.lastIndexOf(SEPARATOR, path.length() - 2)
             : path.lastIndexOf(SEPARATOR);
@@ -169,19 +188,19 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#subpath(int, int)
    */
-  public UnixPath subpath(int beginIndex, int endIndex) {
+  public UnixPath subpath(final int beginIndex, final int endIndex) {
     if (path.isEmpty() && beginIndex == 0 && endIndex == 1) {
       return this;
     }
 
-    if (beginIndex < 0 || endIndex <= beginIndex) {
+    if (!(0 <= beginIndex && beginIndex < endIndex)) {
       throw new IllegalArgumentException("begin index or end index is invalid");
     }
 
     final List<String> subList;
     try {
       subList = getParts().subList(beginIndex, endIndex);
-    } catch (IndexOutOfBoundsException e) {
+    } catch (final IndexOutOfBoundsException e) {
       throw new IllegalArgumentException();
     }
     return new UnixPath(String.join("" + SEPARATOR, subList));
@@ -207,13 +226,13 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#getName(int)
    */
-  public UnixPath getName(int index) {
+  public UnixPath getName(final int index) {
     if (path.isEmpty()) {
       return this;
     }
     try {
       return new UnixPath(getParts().get(index));
-    } catch (IndexOutOfBoundsException e) {
+    } catch (final IndexOutOfBoundsException e) {
       throw new IllegalArgumentException();
     }
   }
@@ -224,14 +243,14 @@ final class UnixPath implements CharSequence {
    * @see java.nio.file.Path#normalize()
    */
   public UnixPath normalize() {
-    List<String> parts = new ArrayList<>();
+    final List<String> parts = new ArrayList<>();
     boolean mutated = false;
     int resultLength = 0;
     int mark = 0;
     int index;
     do {
       index = path.indexOf(SEPARATOR, mark);
-      String part = path.substring(mark, index == -1 ? path.length() : index + 1);
+      final String part = path.substring(mark, index == -1 ? path.length() : index + 1);
       switch (part) {
         case CURRENT_DIR:
         case CURRENT_DIR + SEPARATOR:
@@ -257,7 +276,7 @@ final class UnixPath implements CharSequence {
     if (!mutated) {
       return this;
     }
-    StringBuilder result = new StringBuilder(resultLength);
+    final StringBuilder result = new StringBuilder(resultLength);
     for (String part : parts) {
       result.append(part);
     }
@@ -269,7 +288,7 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#resolve(java.nio.file.Path)
    */
-  public UnixPath resolve(UnixPath other) {
+  public UnixPath resolve(final UnixPath other) {
     if (other.path.isEmpty()) {
       return this;
     } else if (other.isAbsolute()) {
@@ -286,8 +305,8 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#resolveSibling(java.nio.file.Path)
    */
-  public UnixPath resolveSibling(UnixPath other) {
-    Objects.requireNonNull(other);
+  public UnixPath resolveSibling(final UnixPath other) {
+    Objects.requireNonNull(other, "other path is null");
     final UnixPath parent = getParent();
     return parent == null ? other : parent.resolve(other);
   }
@@ -297,7 +316,7 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#relativize(java.nio.file.Path)
    */
-  public UnixPath relativize(UnixPath other) {
+  public UnixPath relativize(final UnixPath other) {
     if (path.isEmpty()) {
       return other;
     }
@@ -314,7 +333,7 @@ final class UnixPath implements CharSequence {
       leftIndex++;
       rightIndex++;
     }
-    StringBuilder result = new StringBuilder(path.length() + other.path.length());
+    final StringBuilder result = new StringBuilder(path.length() + other.path.length());
     while (leftIndex < leftSize) {
       result.append(UnixPath.PARENT_DIR);
       result.append(UnixPath.SEPARATOR);
@@ -336,20 +355,20 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#startsWith(java.nio.file.Path)
    */
-  public boolean startsWith(UnixPath other) {
-    UnixPath me = removeTrailingSeparator();
-    other = other.removeTrailingSeparator();
-    if (other.path.length() > me.path.length()) {
+  public boolean startsWith(final UnixPath other) {
+    final UnixPath left = removeTrailingSeparator();
+    final UnixPath right = other.removeTrailingSeparator();
+    if (left.path.length() < right.path.length()) {
       return false;
-    } else if (me.isAbsolute() != other.isAbsolute()) {
+    } else if (left.isAbsolute() != right.isAbsolute()) {
       return false;
-    } else if (!me.path.isEmpty() && other.path.isEmpty()) {
+    } else if (!left.path.isEmpty() && right.path.isEmpty()) {
       return false;
     }
-    return startsWith(getParts(), other.getParts());
+    return startsWith(getParts(), right.getParts());
   }
 
-  private static boolean startsWith(List<String> lefts, List<String> rights) {
+  private static boolean startsWith(final List<String> lefts, final List<String> rights) {
     int rightIndex = 0;
     int leftIndex = 0;
     final int leftSize = lefts.size();
@@ -370,17 +389,17 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#endsWith(java.nio.file.Path)
    */
-  public boolean endsWith(UnixPath other) {
-    UnixPath me = removeTrailingSeparator();
-    other = other.removeTrailingSeparator();
-    if (other.path.length() > me.path.length()) {
+  public boolean endsWith(final UnixPath other) {
+    final UnixPath left = removeTrailingSeparator();
+    final UnixPath right = other.removeTrailingSeparator();
+    if (left.path.length() < right.path.length()) {
       return false;
-    } else if (!me.path.isEmpty() && other.path.isEmpty()) {
+    } else if (!left.path.isEmpty() && right.path.isEmpty()) {
       return false;
-    } else if (other.isAbsolute()) {
-      return me.isAbsolute() && me.path.equals(other.path);
+    } else if (right.isAbsolute()) {
+      return left.isAbsolute() && left.path.equals(right.path);
     }
-    return startsWith(me.getReverseParts(), other.getReverseParts());
+    return startsWith(left.getReverseParts(), right.getReverseParts());
   }
 
   /**
@@ -388,12 +407,12 @@ final class UnixPath implements CharSequence {
    *
    * @see java.nio.file.Path#compareTo(java.nio.file.Path)
    */
-  public int compareTo(UnixPath other) {
+  public int compareTo(final UnixPath other) {
     return this.path.compareTo(other.path);
   }
 
   /** Converts relative path to an absolute path. */
-  public UnixPath toAbsolutePath(UnixPath currentWorkingDirectory) {
+  public UnixPath toAbsolutePath(final UnixPath currentWorkingDirectory) {
     return isAbsolute() ? this : currentWorkingDirectory.resolve(this);
   }
 
@@ -422,7 +441,7 @@ final class UnixPath implements CharSequence {
   }
 
   @Override
-  public boolean equals(Object other) {
+  public boolean equals(final Object other) {
     return this == other || other instanceof UnixPath && path.equals(((UnixPath) other).path);
   }
 
@@ -443,12 +462,12 @@ final class UnixPath implements CharSequence {
   }
 
   @Override
-  public char charAt(int index) {
+  public char charAt(final int index) {
     return path.charAt(index);
   }
 
   @Override
-  public CharSequence subSequence(int start, int end) {
+  public CharSequence subSequence(final int start, final int end) {
     return path.subSequence(start, end);
   }
 
@@ -458,7 +477,7 @@ final class UnixPath implements CharSequence {
   }
 
   /** Returns list of path components, excluding slashes. */
-  private List<String> getParts() {
+  List<String> getParts() {
     if (lazyParts == null) {
       if (path.isEmpty() || isRoot()) {
         lazyParts = Collections.emptyList();

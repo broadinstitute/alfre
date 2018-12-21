@@ -4,6 +4,7 @@ import java.util.Objects;
 
 public interface Runner {
 
+  /** Runs with the provided cli options. */
   default void run(Options options) {
     Objects.requireNonNull(options, "options is null");
     if (options instanceof UsageOptions) {
