@@ -31,14 +31,14 @@ public class UsageOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof UsageOptions)) {
+    if (!(other instanceof UsageOptions)) {
       return false;
     }
-    final UsageOptions usageOptions = (UsageOptions) o;
+    final UsageOptions usageOptions = (UsageOptions) other;
     return isDoModifications() == usageOptions.isDoModifications()
         && getVerbosity() == usageOptions.getVerbosity();
   }

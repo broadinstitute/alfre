@@ -37,14 +37,14 @@ public class CpOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof CpOptions)) {
+    if (!(other instanceof CpOptions)) {
       return false;
     }
-    final CpOptions cpOptions = (CpOptions) o;
+    final CpOptions cpOptions = (CpOptions) other;
     return isDoModifications() == cpOptions.isDoModifications()
         && getVerbosity() == cpOptions.getVerbosity()
         && Objects.equals(getSourcePath(), cpOptions.getSourcePath())

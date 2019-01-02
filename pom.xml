@@ -12,9 +12,10 @@
     <module>alfre-v0-bom</module>
     <module>alfre-v0-cli</module>
     <module>alfre-v0-impl-all</module>
+    <module>alfre-v0-impl-http</module>
     <module>alfre-v0-impl-s3</module>
     <module>alfre-v0-spi</module>
-    <module>alfre-v0-spi-test</module>
+    <module>alfre-v0-test</module>
     <module>alfre-v0-util</module>
   </modules>
 

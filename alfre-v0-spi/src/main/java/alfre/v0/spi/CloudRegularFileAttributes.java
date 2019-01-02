@@ -2,7 +2,34 @@ package alfre.v0.spi;
 
 import java.nio.file.attribute.FileTime;
 
-public abstract class CloudRegularFileAttributes implements CloudFileAttributes {
+public class CloudRegularFileAttributes implements CloudFileAttributes {
+
+  private final FileTime lastModifiedTime;
+  private final String fileHash;
+  private final long size;
+
+  /** Creates a new CloudRegularFileAttributes. */
+  public CloudRegularFileAttributes(
+      final FileTime lastModifiedTime, final String fileHash, final long size) {
+    this.lastModifiedTime = lastModifiedTime;
+    this.fileHash = fileHash;
+    this.size = size;
+  }
+
+  @Override
+  public String fileHash() {
+    return fileHash;
+  }
+
+  @Override
+  public FileTime lastModifiedTime() {
+    return lastModifiedTime;
+  }
+
+  @Override
+  public long size() {
+    return size;
+  }
 
   @Override
   public FileTime lastAccessTime() {

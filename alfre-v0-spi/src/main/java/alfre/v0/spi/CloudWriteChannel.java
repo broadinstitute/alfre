@@ -7,22 +7,16 @@ import java.nio.channels.NonReadableChannelException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-@SuppressWarnings("unused")
-public class CloudWriteChannel implements SeekableByteChannel {
+@SuppressWarnings({"WeakerAccess", "Duplicates"})
+public class CloudWriteChannel<CloudHostT extends CloudHost> implements SeekableByteChannel {
 
-  private final CloudFileProvider fileProvider;
-  private final CloudRetry retry;
-  private final CloudPath cloudPath;
+  private final CloudPath<CloudHostT> cloudPath;
 
   private long internalPosition;
   private WritableByteChannel channel;
 
   /** Creates a new CloudWriteChannel. */
-  public CloudWriteChannel(
-      final CloudFileProvider fileProvider, final CloudRetry retry, final CloudPath cloudPath)
-      throws IOException {
-    this.fileProvider = fileProvider;
-    this.retry = retry;
+  public CloudWriteChannel(final CloudPath<CloudHostT> cloudPath) throws IOException {
     this.cloudPath = cloudPath;
     channel = resetWritablePosition(0);
   }
@@ -35,15 +29,16 @@ public class CloudWriteChannel implements SeekableByteChannel {
   @Override
   public int write(final ByteBuffer src) throws IOException {
     try {
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
       final boolean[] resetConnection = {false};
       final int count =
           retry.runWithRetries(
               () -> {
                 try {
                   if (resetConnection[0]) {
-                    channel =
-                        fileProvider.write(
-                            cloudPath.getCloudHost(), cloudPath.getCloudPath(), internalPosition);
+                    channel = fileProvider.write(cloudPath, internalPosition);
                   }
                   return channel.write(src);
                 } catch (final Exception exception) {
@@ -84,9 +79,10 @@ public class CloudWriteChannel implements SeekableByteChannel {
 
   private WritableByteChannel resetWritablePosition(final long newPosition) throws IOException {
     try {
-      return retry.runWithRetries(
-          () ->
-              fileProvider.write(cloudPath.getCloudHost(), cloudPath.getCloudPath(), newPosition));
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
+      return retry.runWithRetries(() -> fileProvider.write(cloudPath, newPosition));
     } catch (final CloudRetryException cloudRetryException) {
       throw cloudRetryException.getCauseIoException();
     }

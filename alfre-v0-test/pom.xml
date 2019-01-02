@@ -4,7 +4,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>alfre-v0-spi-test</artifactId>
+  <artifactId>alfre-v0-test</artifactId>
   <groupId>org.broadinstitute</groupId>
   <version>0.1.0-SNAPSHOT</version>
 
@@ -12,6 +12,7 @@
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <pmdVersion>6.10.0</pmdVersion>
   </properties>
 
   <dependencyManagement>
@@ -51,6 +52,18 @@
 
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <showWarnings>true</showWarnings>
+          <compilerArgs>
+            <arg>-Werror</arg>
+            <arg>-Xlint:all</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
       <!-- JUnit 5 requires Surefire version 2.22.0 or higher -->
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
@@ -110,17 +123,88 @@
         </dependencies>
         <executions>
           <execution>
-            <id>checkstyle</id>
             <phase>test</phase>
-            <configuration>
-              <logViolationsToConsole>true</logViolationsToConsole>
-              <includeTestSourceDirectory>true</includeTestSourceDirectory>
-              <configLocation>alfre_checks.xml</configLocation>
-              <violationSeverity>info</violationSeverity>
-            </configuration>
             <goals>
               <goal>check</goal>
             </goals>
+            <configuration>
+              <logViolationsToConsole>true</logViolationsToConsole>
+              <includeTestSourceDirectory>true</includeTestSourceDirectory>
+              <configLocation>checkstyle.xml</configLocation>
+              <violationSeverity>info</violationSeverity>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <rulesets>
+            <ruleset>ruleset.xml</ruleset>
+          </rulesets>
+          <printFailingErrors>true</printFailingErrors>
+          <linkXRef>false</linkXRef>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+              <goal>cpd-check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-core</artifactId>
+            <version>${pmdVersion}</version>
+          </dependency>
+          <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-java</artifactId>
+            <version>${pmdVersion}</version>
+          </dependency>
+          <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-javascript</artifactId>
+            <version>${pmdVersion}</version>
+          </dependency>
+          <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-jsp</artifactId>
+            <version>${pmdVersion}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.broadinstitute</groupId>
+            <artifactId>alfre-v0-bom</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>3.1.10</version>
+        <executions>
+          <execution>
+            <!--
+            As of spotbugs-maven v3.1.10, the <id> must be set to "spotbugs" otherwise the config
+            for the "check:default" goal aren't passed to the implicit "spotbugs:spotbugs" goal.
+            -->
+            <id>spotbugs</id>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <configuration>
+              <threshold>Low</threshold>
+              <excludeFilterFile>
+                ../alfre-v0-bom/target/classes/findbugs-excludes.xml
+              </excludeFilterFile>
+            </configuration>
           </execution>
         </executions>
       </plugin>

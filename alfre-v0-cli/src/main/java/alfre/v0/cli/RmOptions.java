@@ -17,7 +17,7 @@ public class RmOptions extends Options {
   }
 
   public String[] getPaths() {
-    return paths;
+    return Arrays.copyOf(paths, paths.length);
   }
 
   @Override
@@ -28,14 +28,14 @@ public class RmOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof RmOptions)) {
+    if (!(other instanceof RmOptions)) {
       return false;
     }
-    final RmOptions rmOptions = (RmOptions) o;
+    final RmOptions rmOptions = (RmOptions) other;
     return isDoModifications() == rmOptions.isDoModifications()
         && getVerbosity() == rmOptions.getVerbosity()
         && Arrays.equals(getPaths(), rmOptions.getPaths());

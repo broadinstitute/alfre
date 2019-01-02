@@ -17,7 +17,7 @@ public class CatOptions extends Options {
   }
 
   public String[] getPaths() {
-    return paths;
+    return Arrays.copyOf(paths, paths.length);
   }
 
   @Override
@@ -28,14 +28,14 @@ public class CatOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof CatOptions)) {
+    if (!(other instanceof CatOptions)) {
       return false;
     }
-    final CatOptions catOptions = (CatOptions) o;
+    final CatOptions catOptions = (CatOptions) other;
     return isDoModifications() == catOptions.isDoModifications()
         && getVerbosity() == catOptions.getVerbosity()
         && Arrays.equals(getPaths(), catOptions.getPaths());

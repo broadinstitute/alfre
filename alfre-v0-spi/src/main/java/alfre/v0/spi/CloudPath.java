@@ -3,7 +3,6 @@ package alfre.v0.spi;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.ProviderMismatchException;
@@ -15,33 +14,47 @@ import java.util.Iterator;
 import java.util.Objects;
 
 @SuppressWarnings("WeakerAccess")
-public class CloudPath implements Path {
+public class CloudPath<CloudHostT extends CloudHost> implements Path {
 
-  /**
-   * Returns the path if it's a cloud path, otherwise throws a {@code ProviderMismatchException}.
-   */
-  public static CloudPath checkPath(final Path path) {
-    if (path instanceof CloudPath) {
-      return (CloudPath) path;
+  private final UnixPath unixPath;
+  private final CloudFileSystem<CloudHostT> fileSystem;
+  private final CloudFileAttributes attributes;
+
+  /** Creates a new CloudPath. */
+  protected CloudPath(final CloudFileSystem<CloudHostT> fileSystem, final UnixPath unixPath) {
+    this(fileSystem, unixPath, null);
+  }
+
+  /** Creates a new CloudPath. */
+  protected CloudPath(
+      final CloudFileSystem<CloudHostT> fileSystem,
+      final UnixPath unixPath,
+      final CloudFileAttributes attributes) {
+    Objects.requireNonNull(fileSystem, "fileSystem is null");
+    Objects.requireNonNull(unixPath, "unixPath is null");
+    this.fileSystem = fileSystem;
+    this.unixPath = unixPath;
+    this.attributes = attributes;
+  }
+
+  protected CloudPath<CloudHostT> withAttributes(final CloudFileAttributes attributes) {
+    if (attributes == null) {
+      return this;
     } else {
-      throw new ProviderMismatchException("Not a CloudPath: " + path);
+      return new CloudPath<>(fileSystem, unixPath, attributes);
     }
   }
 
-  private final UnixPath unixPath;
-  private final CloudFileSystem fileSystem;
-
-  CloudPath(final CloudFileSystem fileSystem, final UnixPath unixPath) {
-    this.fileSystem = fileSystem;
-    this.unixPath = unixPath;
+  public CloudFileAttributes getAttributes() {
+    return attributes;
   }
 
-  public String getCloudHost() {
+  public CloudHostT getCloudHost() {
     return fileSystem.getHost();
   }
 
-  public String getCloudPath() {
-    return unixPath.toAbsolutePath().toString().replaceFirst("^/", "");
+  public String getAbsolutedPathAsString() {
+    return unixPath.toAbsolutePath().removeBeginningSeparator().toString();
   }
 
   /**
@@ -54,7 +67,7 @@ public class CloudPath implements Path {
    * @see java.nio.file.Paths#get(java.net.URI)
    */
   public String getUriAsString() {
-    return fileSystem.provider().getScheme() + "://" + getCloudHost() + "/" + getCloudPath();
+    return getCloudHost().getUriAsString(getAbsolutedPathAsString());
   }
 
   /** Returns just the path as a string without the host. */
@@ -68,29 +81,35 @@ public class CloudPath implements Path {
    */
   public String getRelativeDependentPath() {
     if (unixPath.isAbsolute()) {
-      return getCloudHost() + "/" + unixPath.toString().replaceFirst("^/", "");
+      return getCloudHost().getRelativeHostPath(unixPath.removeBeginningSeparator().toString());
     } else {
       return unixPath.normalize().toString();
     }
   }
 
   public boolean seemsLikeDirectory() {
-    return unixPath.seemsLikeADirectory();
+    return unixPath.seemsLikeDirectory();
+  }
+
+  public CloudPath<CloudHostT> addTrailingSeparator() {
+    return new CloudPath<>(
+        fileSystem, unixPath.addTrailingSeparator(), CloudPseudoDirectoryAttributes.INSTANCE);
   }
 
   @Override
-  public FileSystem getFileSystem() {
+  public CloudFileSystem<CloudHostT> getFileSystem() {
     return fileSystem;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public int compareTo(final Path other) {
     if (!(other instanceof CloudPath)) {
       return -1;
     }
-    final CloudPath that = (CloudPath) other;
-    final int res = getCloudHost().compareTo(that.getCloudHost());
-    return res != 0 ? res : unixPath.compareTo(that.unixPath);
+    final CloudPath<CloudHostT> that = (CloudPath<CloudHostT>) other;
+    final int result = getCloudHost().compareTo(that.getCloudHost());
+    return result != 0 ? result : unixPath.compareTo(that.unixPath);
   }
 
   @Override
@@ -99,17 +118,17 @@ public class CloudPath implements Path {
   }
 
   @Override
-  public CloudPath getRoot() {
+  public CloudPath<CloudHostT> getRoot() {
     return newPathOrNull(unixPath.getRoot());
   }
 
   @Override
-  public CloudPath getFileName() {
+  public CloudPath<CloudHostT> getFileName() {
     return newPathOrNull(unixPath.getFileName());
   }
 
   @Override
-  public CloudPath getParent() {
+  public CloudPath<CloudHostT> getParent() {
     return newPathOrNull(unixPath.getParent());
   }
 
@@ -119,27 +138,29 @@ public class CloudPath implements Path {
   }
 
   @Override
-  public CloudPath getName(final int index) {
+  public CloudPath<CloudHostT> getName(final int index) {
     return newPathOrNull(unixPath.getName(index));
   }
 
   @Override
-  public CloudPath subpath(final int beginIndex, final int endIndex) {
+  public CloudPath<CloudHostT> subpath(final int beginIndex, final int endIndex) {
     return newPathOrNull(unixPath.subpath(beginIndex, endIndex));
   }
 
+  @SuppressWarnings("unchecked")
   private boolean isSameCloudHost(final Path other) {
     if (other instanceof CloudPath) {
-      final CloudPath that = (CloudPath) other;
+      final CloudPath<CloudHostT> that = (CloudPath<CloudHostT>) other;
       return Objects.equals(getCloudHost(), that.getCloudHost());
     }
     return false;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean startsWith(final Path other) {
     if (isSameCloudHost(other)) {
-      final CloudPath that = (CloudPath) other;
+      final CloudPath<CloudHostT> that = (CloudPath<CloudHostT>) other;
       return unixPath.startsWith(that.unixPath);
     }
     return false;
@@ -150,10 +171,11 @@ public class CloudPath implements Path {
     return unixPath.startsWith(UnixPath.getPath(other));
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public boolean endsWith(final Path other) {
     if (isSameCloudHost(other)) {
-      final CloudPath that = (CloudPath) other;
+      final CloudPath<CloudHostT> that = (CloudPath<CloudHostT>) other;
       return unixPath.endsWith(that.unixPath);
     }
     return false;
@@ -165,55 +187,54 @@ public class CloudPath implements Path {
   }
 
   @Override
-  public CloudPath normalize() {
+  public CloudPath<CloudHostT> normalize() {
     return newPathOrNull(unixPath.normalize());
   }
 
   @Override
-  public CloudPath resolve(final Path other) {
-    final CloudPath that = CloudPath.checkPath(other);
+  public CloudPath<CloudHostT> resolve(final Path other) {
+    final CloudPath<CloudHostT> that = CloudPath.checkPath(other);
     return newPathOrNull(unixPath.resolve(that.unixPath));
   }
 
   @Override
-  public CloudPath resolve(final String other) {
+  public CloudPath<CloudHostT> resolve(final String other) {
     return newPathOrNull(unixPath.resolve(UnixPath.getPath(other)));
   }
 
   @Override
-  public CloudPath resolveSibling(final Path other) {
-    final CloudPath that = CloudPath.checkPath(other);
+  public CloudPath<CloudHostT> resolveSibling(final Path other) {
+    final CloudPath<CloudHostT> that = CloudPath.checkPath(other);
     return newPathOrNull(unixPath.resolveSibling(that.unixPath));
   }
 
   @Override
-  public CloudPath resolveSibling(final String other) {
+  public CloudPath<CloudHostT> resolveSibling(final String other) {
     return newPathOrNull(UnixPath.getPath(other));
   }
 
   @Override
-  public CloudPath relativize(final Path other) {
-    final CloudPath that = CloudPath.checkPath(other);
+  public CloudPath<CloudHostT> relativize(final Path other) {
+    final CloudPath<CloudHostT> that = CloudPath.checkPath(other);
     return newPathOrNull(unixPath.relativize(that.unixPath));
   }
 
   @Override
   public URI toUri() {
     try {
-      return new URI(
-          fileSystem.provider().getScheme(), fileSystem.getHost(), "/" + getCloudPath(), null);
+      return new URI(getUriAsString());
     } catch (final URISyntaxException uriSyntaxException) {
       throw new CloudPathException(uriSyntaxException);
     }
   }
 
   @Override
-  public CloudPath toAbsolutePath() {
+  public CloudPath<CloudHostT> toAbsolutePath() {
     return newPathOrNull(unixPath.toAbsolutePath());
   }
 
   @Override
-  public CloudPath toRealPath(final LinkOption... options) {
+  public CloudPath<CloudHostT> toRealPath(final LinkOption... options) {
     return toAbsolutePath();
   }
 
@@ -250,26 +271,27 @@ public class CloudPath implements Path {
     }
   }
 
-  protected CloudPath newPathOrNull(final UnixPath unixPath) {
+  protected CloudPath<CloudHostT> newPathOrNull(final UnixPath unixPath) {
     if (unixPath == null) {
       return null;
     } else if (Objects.equals(this.unixPath, unixPath)) {
       return this;
     } else {
-      return new CloudPath(fileSystem, unixPath);
+      return new CloudPath<>(fileSystem, unixPath);
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof CloudPath)) {
+    if (!(other instanceof CloudPath)) {
       return false;
     }
 
-    final CloudPath paths = (CloudPath) o;
+    final CloudPath<CloudHostT> paths = (CloudPath<CloudHostT>) other;
 
     if (!Objects.equals(unixPath, paths.unixPath)) {
       return false;
@@ -280,13 +302,26 @@ public class CloudPath implements Path {
   @Override
   public int hashCode() {
     int result;
-    result = (unixPath != null ? unixPath.hashCode() : 0);
+    result = unixPath != null ? unixPath.hashCode() : 0;
     result = 31 * result + (fileSystem != null ? fileSystem.hashCode() : 0);
     return result;
   }
 
   @Override
   public String toString() {
-    return String.format("CloudPath{unixPath=%s, fileSystem=%s}", unixPath, fileSystem);
+    return getPathOnlyAsString();
+  }
+
+  /**
+   * Returns the path if it's a cloud path, otherwise throws a {@code ProviderMismatchException}.
+   */
+  @SuppressWarnings("unchecked")
+  public static <CloudHostT extends CloudHost> CloudPath<CloudHostT> checkPath(final Path path) {
+    Objects.requireNonNull(path, "path is null");
+    if (path instanceof CloudPath) {
+      return (CloudPath<CloudHostT>) path;
+    } else {
+      throw new ProviderMismatchException("Not a CloudPath: " + path.getClass());
+    }
   }
 }

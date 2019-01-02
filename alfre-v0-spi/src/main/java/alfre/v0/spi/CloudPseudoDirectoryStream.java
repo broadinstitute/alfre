@@ -8,24 +8,17 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
-@SuppressWarnings("unused")
-public class CloudPseudoDirectoryStream implements DirectoryStream<Path> {
+@SuppressWarnings("WeakerAccess")
+public class CloudPseudoDirectoryStream<CloudHostT extends CloudHost>
+    implements DirectoryStream<Path> {
 
-  private final CloudFileProvider fileProvider;
-  private final CloudRetry retry;
-  private final CloudPath prefix;
+  private final CloudPath<CloudHostT> prefix;
   private final DirectoryStream.Filter<? super Path> filter;
 
   /** Creates a new CloudPseudoDirectoryStream. */
   public CloudPseudoDirectoryStream(
-      final CloudFileProvider fileProvider,
-      final CloudRetry retry,
-      final CloudPath prefix,
-      final Filter<? super Path> filter) {
-    this.fileProvider = fileProvider;
-    this.retry = retry;
+      final CloudPath<CloudHostT> prefix, final Filter<? super Path> filter) {
     this.prefix = prefix;
     this.filter = filter;
   }
@@ -36,12 +29,13 @@ public class CloudPseudoDirectoryStream implements DirectoryStream<Path> {
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    /* Nothing to close. */
+  }
 
   private Stream<Path> pathStream(final String marker) {
     final CloudFileList nextList = listNext(marker);
-    final Stream<Path> nextStream =
-        StreamSupport.stream(nextList.getPaths().spliterator(), false).map(this::toPath);
+    final Stream<Path> nextStream = nextList.getElements().map(this::toPath);
     final String nextMarker = nextList.getMarker();
     if (nextMarker == null) {
       return nextStream;
@@ -51,14 +45,18 @@ public class CloudPseudoDirectoryStream implements DirectoryStream<Path> {
     }
   }
 
-  private Path toPath(final String key) {
-    return prefix.getFileSystem().getPath("/" + key);
+  private Path toPath(final CloudFileListElement element) {
+    final String key = element.getKey();
+    final String slashed = key.startsWith("/") ? key : "/" + key;
+    return prefix.getFileSystem().getPath(slashed).withAttributes(element.getAttributes());
   }
 
   private CloudFileList listNext(final String marker) {
     try {
-      return retry.runWithRetries(
-          () -> fileProvider.listObjects(prefix.getCloudHost(), prefix.getCloudPath(), marker));
+      final CloudFileSystem<CloudHostT> fileSystem = prefix.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
+      return retry.runWithRetries(() -> fileProvider.list(prefix, marker));
     } catch (final CloudRetryException cloudRetryException) {
       throw new DirectoryIteratorException(cloudRetryException.getCauseIoException());
     }

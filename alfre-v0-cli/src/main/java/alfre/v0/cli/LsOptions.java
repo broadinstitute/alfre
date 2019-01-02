@@ -26,7 +26,7 @@ public class LsOptions extends Options {
   }
 
   public String[] getPaths() {
-    return paths;
+    return Arrays.copyOf(paths, paths.length);
   }
 
   @Override
@@ -37,14 +37,14 @@ public class LsOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof LsOptions)) {
+    if (!(other instanceof LsOptions)) {
       return false;
     }
-    final LsOptions lsOptions = (LsOptions) o;
+    final LsOptions lsOptions = (LsOptions) other;
     return isDoModifications() == lsOptions.isDoModifications()
         && getVerbosity() == lsOptions.getVerbosity()
         && isListAttributes() == lsOptions.isListAttributes()

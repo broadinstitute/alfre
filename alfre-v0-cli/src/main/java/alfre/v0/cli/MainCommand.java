@@ -19,7 +19,7 @@ import picocli.CommandLine.RunLast;
       RmCommand.class,
       CpCommand.class
     })
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings("WeakerAccess")
 public class MainCommand extends Command<UsageOptions> {
 
   /** Parse args into command line options. */
@@ -29,10 +29,8 @@ public class MainCommand extends Command<UsageOptions> {
     final ByteArrayOutputStream errBytes = new ByteArrayOutputStream();
     try {
       final List<Object> result;
-      try (final PrintStream outStream =
-              new PrintStream(outBytes, true, StandardCharsets.UTF_8.name());
-          final PrintStream errStream =
-              new PrintStream(errBytes, true, StandardCharsets.UTF_8.name())) {
+      try (PrintStream outStream = new PrintStream(outBytes, true, StandardCharsets.UTF_8.name());
+          PrintStream errStream = new PrintStream(errBytes, true, StandardCharsets.UTF_8.name())) {
         result =
             commandLine.parseWithHandlers(
                 new RunLast().useOut(outStream).useErr(errStream),

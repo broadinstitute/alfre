@@ -9,22 +9,16 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.attribute.BasicFileAttributes;
 
-@SuppressWarnings("unused")
-public class CloudReadChannel implements SeekableByteChannel {
+@SuppressWarnings({"WeakerAccess", "Duplicates"})
+public class CloudReadChannel<CloudHostT extends CloudHost> implements SeekableByteChannel {
 
-  private final CloudFileProvider fileProvider;
-  private final CloudRetry retry;
-  private final CloudPath cloudPath;
+  private final CloudPath<CloudHostT> cloudPath;
 
   private long internalPosition;
   private ReadableByteChannel channel;
 
   /** Creates a new CloudReadChannel. */
-  public CloudReadChannel(
-      final CloudFileProvider fileProvider, final CloudRetry retry, final CloudPath cloudPath)
-      throws IOException {
-    this.fileProvider = fileProvider;
-    this.retry = retry;
+  public CloudReadChannel(final CloudPath<CloudHostT> cloudPath) throws IOException {
     this.cloudPath = cloudPath;
     channel = resetReadablePosition(0);
   }
@@ -32,15 +26,16 @@ public class CloudReadChannel implements SeekableByteChannel {
   @Override
   public int read(final ByteBuffer dst) throws IOException {
     try {
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
       final boolean[] resetConnection = {false};
       final int count =
           retry.runWithRetries(
               () -> {
                 try {
                   if (resetConnection[0]) {
-                    channel =
-                        fileProvider.read(
-                            cloudPath.getCloudHost(), cloudPath.getCloudPath(), internalPosition);
+                    channel = fileProvider.read(cloudPath, internalPosition);
                   }
                   return channel.read(dst);
                 } catch (final Exception exception) {
@@ -86,8 +81,10 @@ public class CloudReadChannel implements SeekableByteChannel {
 
   private ReadableByteChannel resetReadablePosition(final long newPosition) throws IOException {
     try {
-      return retry.runWithRetries(
-          () -> fileProvider.read(cloudPath.getCloudHost(), cloudPath.getCloudPath(), newPosition));
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
+      return retry.runWithRetries(() -> fileProvider.read(cloudPath, newPosition));
     } catch (final CloudRetryException cloudRetryException) {
       throw cloudRetryException.getCauseIoException();
     }
@@ -96,11 +93,13 @@ public class CloudReadChannel implements SeekableByteChannel {
   @Override
   public long size() throws IOException {
     try {
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
       return retry
-          .runWithRetries(
-              () -> fileProvider.fileAttributes(cloudPath.getCloudHost(), cloudPath.getCloudPath()))
+          .runWithRetries(() -> fileProvider.fileAttributes(cloudPath))
           .map(BasicFileAttributes::size)
-          .orElseThrow(() -> new FileNotFoundException(cloudPath.getUriAsString()));
+          .orElseThrow(FileNotFoundException::new);
     } catch (final CloudRetryException cloudRetryException) {
       throw cloudRetryException.getCauseIoException();
     }

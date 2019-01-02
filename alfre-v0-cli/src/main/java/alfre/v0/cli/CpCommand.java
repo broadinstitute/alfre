@@ -4,12 +4,14 @@ import picocli.CommandLine;
 import picocli.CommandLine.Parameters;
 
 @CommandLine.Command(name = "cp", description = "Copy files")
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings("WeakerAccess")
 public class CpCommand extends Command<CpOptions> {
 
+  @SuppressWarnings("unused")
   @Parameters(paramLabel = "<source>", description = "Source cloud or local path", index = "0")
   private String sourcePath;
 
+  @SuppressWarnings("unused")
   @Parameters(paramLabel = "<target>", description = "Target cloud or local path", index = "1")
   private String targetPath;
 

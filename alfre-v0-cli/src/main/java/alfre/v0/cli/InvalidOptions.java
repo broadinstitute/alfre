@@ -26,14 +26,14 @@ public class InvalidOptions extends Options {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof InvalidOptions)) {
+    if (!(other instanceof InvalidOptions)) {
       return false;
     }
-    final InvalidOptions invalidOptions = (InvalidOptions) o;
+    final InvalidOptions invalidOptions = (InvalidOptions) other;
     return isDoModifications() == invalidOptions.isDoModifications()
         && getVerbosity() == invalidOptions.getVerbosity();
   }

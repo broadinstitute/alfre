@@ -38,10 +38,9 @@ import java.util.Objects;
  * href="http://docs.oracle.com/javase/tutorial/i18n/text/supplementaryChars.html">Supplementary
  * Characters as Surrogates</a>.
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess"})
 final class UnixPath implements CharSequence {
 
-  public static final char DOT = '.';
   public static final char SEPARATOR = '/';
   public static final String ROOT = "/";
   public static final String CURRENT_DIR = ".";
@@ -127,12 +126,13 @@ final class UnixPath implements CharSequence {
   }
 
   /** Returns {@code true} if path ends with a trailing slash, or would after normalization. */
-  public boolean seemsLikeADirectory() {
+  @SuppressWarnings("Duplicates")
+  public boolean seemsLikeDirectory() {
     final int length = path.length();
     return path.isEmpty()
         || path.charAt(length - 1) == SEPARATOR
-        || path.endsWith(CURRENT_DIR) && (length == 1 || path.charAt(length - 2) == SEPARATOR)
-        || path.endsWith(PARENT_DIR) && (length == 2 || path.charAt(length - 3) == SEPARATOR);
+        || (path.endsWith(CURRENT_DIR) && (length == 1 || path.charAt(length - 2) == SEPARATOR))
+        || (path.endsWith(PARENT_DIR) && (length == 2 || path.charAt(length - 3) == SEPARATOR));
   }
 
   /**
@@ -200,7 +200,7 @@ final class UnixPath implements CharSequence {
     final List<String> subList;
     try {
       subList = getParts().subList(beginIndex, endIndex);
-    } catch (final IndexOutOfBoundsException e) {
+    } catch (final IndexOutOfBoundsException indexOutOfBoundsException) {
       throw new IllegalArgumentException();
     }
     return new UnixPath(String.join("" + SEPARATOR, subList));
@@ -232,7 +232,7 @@ final class UnixPath implements CharSequence {
     }
     try {
       return new UnixPath(getParts().get(index));
-    } catch (final IndexOutOfBoundsException e) {
+    } catch (final IndexOutOfBoundsException indexOutOfBoundsException) {
       throw new IllegalArgumentException();
     }
   }
@@ -270,6 +270,7 @@ final class UnixPath implements CharSequence {
           } else {
             mutated = true;
           }
+          break;
       }
       mark = index + 1;
     } while (index != -1);
@@ -277,7 +278,7 @@ final class UnixPath implements CharSequence {
       return this;
     }
     final StringBuilder result = new StringBuilder(resultLength);
-    for (String part : parts) {
+    for (final String part : parts) {
       result.append(part);
     }
     return new UnixPath(result.toString());
@@ -374,12 +375,12 @@ final class UnixPath implements CharSequence {
     final int leftSize = lefts.size();
     final int rightSize = rights.size();
     while (rightIndex < rightSize) {
-      if (!(leftIndex < leftSize)
-          || !Objects.equals(rights.get(rightIndex), lefts.get(leftIndex))) {
+      if (leftIndex < leftSize && Objects.equals(rights.get(rightIndex), lefts.get(leftIndex))) {
+        leftIndex++;
+        rightIndex++;
+      } else {
         return false;
       }
-      leftIndex++;
-      rightIndex++;
     }
     return true;
   }
@@ -477,7 +478,7 @@ final class UnixPath implements CharSequence {
   }
 
   /** Returns list of path components, excluding slashes. */
-  List<String> getParts() {
+  protected List<String> getParts() {
     if (lazyParts == null) {
       if (path.isEmpty() || isRoot()) {
         lazyParts = Collections.emptyList();
