@@ -4,16 +4,14 @@ import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
 import java.util.Objects;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings("WeakerAccess")
 public class CloudRetryException extends Exception {
+
+  private static final long serialVersionUID = -3179675515662154287L;
 
   public CloudRetryException(final Exception cause) {
     super(cause);
     Objects.requireNonNull(cause, "cause was null");
-  }
-
-  public Exception getCauseException() {
-    return (Exception) getCause();
   }
 
   /** Returns the cause as an IOException, wrapping it if necessary. */

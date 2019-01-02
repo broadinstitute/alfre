@@ -1,19 +1,18 @@
 package alfre.v0.spi;
 
 import java.nio.file.attribute.FileTime;
-import java.util.Optional;
 
 @SuppressWarnings("WeakerAccess")
 public final class CloudPseudoDirectoryAttributes implements CloudFileAttributes {
-  private final CloudPath path;
 
-  public CloudPseudoDirectoryAttributes(final CloudPath path) {
-    this.path = path;
-  }
+  public static final CloudPseudoDirectoryAttributes INSTANCE =
+      new CloudPseudoDirectoryAttributes();
+
+  private CloudPseudoDirectoryAttributes() {}
 
   @Override
-  public Optional<String> fileHash() {
-    return Optional.empty();
+  public String fileHash() {
+    return null;
   }
 
   @Override
@@ -54,10 +53,5 @@ public final class CloudPseudoDirectoryAttributes implements CloudFileAttributes
   @Override
   public long size() {
     return 0;
-  }
-
-  @Override
-  public Object fileKey() {
-    return path;
   }
 }

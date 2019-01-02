@@ -15,24 +15,41 @@ import java.util.Objects;
 import java.util.Set;
 
 @SuppressWarnings("WeakerAccess")
-public class CloudFileSystem extends FileSystem {
+public class CloudFileSystem<CloudHostT extends CloudHost> extends FileSystem {
 
   private static final String SEPARATOR = "/";
-  private final CloudFileSystemProvider provider;
-  private final String host;
+  private final CloudFileSystemProvider<CloudHostT> fileSystemProvider;
+  private final CloudFileProvider<CloudHostT> fileProvider;
+  private final CloudHostT host;
+  private final CloudRetry retry;
 
-  public CloudFileSystem(final CloudFileSystemProvider provider, final String host) {
-    this.provider = provider;
+  /** Creates a new CloudFileSystem. */
+  public CloudFileSystem(
+      final CloudFileSystemProvider<CloudHostT> fileSystemProvider,
+      final CloudFileProvider<CloudHostT> fileProvider,
+      final CloudHostT host,
+      final CloudRetry retry) {
+    this.fileSystemProvider = fileSystemProvider;
+    this.fileProvider = fileProvider;
     this.host = host;
+    this.retry = retry;
   }
 
-  public String getHost() {
+  public CloudFileProvider<CloudHostT> getFileProvider() {
+    return fileProvider;
+  }
+
+  public CloudHostT getHost() {
     return host;
   }
 
+  public CloudRetry getRetry() {
+    return retry;
+  }
+
   @Override
-  public CloudFileSystemProvider provider() {
-    return provider;
+  public CloudFileSystemProvider<CloudHostT> provider() {
+    return fileSystemProvider;
   }
 
   @Override
@@ -73,8 +90,8 @@ public class CloudFileSystem extends FileSystem {
   }
 
   @Override
-  public CloudPath getPath(final String first, final String... more) {
-    return new CloudPath(this, UnixPath.getPath(first, more));
+  public CloudPath<CloudHostT> getPath(final String first, final String... more) {
+    return new CloudPath<>(this, UnixPath.getPath(first, more));
   }
 
   @Override
@@ -93,14 +110,15 @@ public class CloudFileSystem extends FileSystem {
   }
 
   @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
+  public boolean equals(final Object other) {
+    if (this == other) {
       return true;
     }
-    if (!(o instanceof CloudFileSystem)) {
+    if (!(other instanceof CloudFileSystem)) {
       return false;
     }
-    final CloudFileSystem that = (CloudFileSystem) o;
+    @SuppressWarnings("unchecked")
+    final CloudFileSystem<CloudHostT> that = (CloudFileSystem<CloudHostT>) other;
     return Objects.equals(provider(), that.provider()) && Objects.equals(getHost(), that.getHost());
   }
 

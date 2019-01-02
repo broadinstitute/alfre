@@ -1,7 +1,10 @@
 package alfre.v0.spi;
 
+import alfre.v0.spi.function.SupplierWithExceptions;
+
 @FunctionalInterface
 public interface CloudRetry {
 
-  <T> T runWithRetries(CloudSupplier<T> supplier) throws CloudRetryException;
+  <T, E extends Exception> T runWithRetries(SupplierWithExceptions<T, E> supplier)
+      throws CloudRetryException;
 }

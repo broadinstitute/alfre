@@ -5,34 +5,34 @@ import java.util.Objects;
 public interface Runner {
 
   /** Runs with the provided cli options. */
-  default void run(Options options) {
+  default boolean run(final Options options) {
     Objects.requireNonNull(options, "options is null");
     if (options instanceof UsageOptions) {
-      runUsage((UsageOptions) options);
+      return runUsage((UsageOptions) options);
     } else if (options instanceof InvalidOptions) {
-      runInvalid((InvalidOptions) options);
+      return runInvalid((InvalidOptions) options);
     } else if (options instanceof LsOptions) {
-      runLs((LsOptions) options);
+      return runLs((LsOptions) options);
     } else if (options instanceof CatOptions) {
-      runCat((CatOptions) options);
+      return runCat((CatOptions) options);
     } else if (options instanceof CpOptions) {
-      runCp((CpOptions) options);
+      return runCp((CpOptions) options);
     } else if (options instanceof RmOptions) {
-      runRm((RmOptions) options);
+      return runRm((RmOptions) options);
     } else {
       throw new IllegalArgumentException("unknown options: " + options);
     }
   }
 
-  void runUsage(UsageOptions usageOptions);
+  boolean runUsage(UsageOptions usageOptions);
 
-  void runInvalid(InvalidOptions invalidOptions);
+  boolean runInvalid(InvalidOptions invalidOptions);
 
-  void runLs(LsOptions lsOptions);
+  boolean runLs(LsOptions lsOptions);
 
-  void runCat(CatOptions catOptions);
+  boolean runCat(CatOptions catOptions);
 
-  void runCp(CpOptions cpOptions);
+  boolean runCp(CpOptions cpOptions);
 
-  void runRm(RmOptions rmOptions);
+  boolean runRm(RmOptions rmOptions);
 }

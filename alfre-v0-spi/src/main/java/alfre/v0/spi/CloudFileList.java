@@ -1,44 +1,37 @@
 package alfre.v0.spi;
 
 import java.util.Objects;
+import java.util.stream.Stream;
 
 @SuppressWarnings("WeakerAccess")
 public class CloudFileList {
-  private final Iterable<String> paths;
+  private final Stream<CloudFileListElement> elements;
   private final String marker;
 
-  public CloudFileList(final Iterable<String> paths, final String marker) {
-    this.paths = paths;
+  /** Creates a new file list. */
+  public CloudFileList(final Stream<CloudFileListElement> elements, final String marker) {
+    Objects.requireNonNull(elements, "elements is null");
+    this.elements = elements;
     this.marker = marker;
   }
 
-  public Iterable<String> getPaths() {
-    return paths;
+  public Stream<CloudFileListElement> getElements() {
+    return elements;
   }
 
   public String getMarker() {
     return marker;
   }
 
-  @Override
-  public boolean equals(final Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (!(o instanceof CloudFileList)) {
-      return false;
-    }
-    final CloudFileList that = (CloudFileList) o;
-    return Objects.equals(paths, that.paths) && Objects.equals(marker, that.marker);
+  public static CloudFileList empty() {
+    return new CloudFileList(Stream.empty(), null);
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(paths, marker);
+  public static CloudFileList of(final CloudFileListElement element) {
+    return new CloudFileList(Stream.of(element), null);
   }
 
-  @Override
-  public String toString() {
-    return String.format("CloudFileList{paths=%s, marker='%s'}", paths, marker);
+  public static CloudFileList of(final CloudFileListElement... elements) {
+    return new CloudFileList(Stream.of(elements), null);
   }
 }

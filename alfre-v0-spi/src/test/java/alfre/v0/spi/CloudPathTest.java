@@ -6,25 +6,26 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("unchecked")
 class CloudPathTest {
 
   @Test
   void getFileSystem() {
-    final CloudFileSystem mockedFileSystem = mock(CloudFileSystem.class);
+    final CloudFileSystem<CloudHost> mockedFileSystem =
+        (CloudFileSystem<CloudHost>) mock(CloudFileSystem.class);
     final UnixPath unixPath = UnixPath.getPath("pathtofile");
-    final String host = "example.com";
-    final CloudPath cloudPath = new CloudPath(mockedFileSystem, unixPath);
+    final CloudPath<CloudHost> cloudPath = new CloudPath<>(mockedFileSystem, unixPath);
     assertEquals(mockedFileSystem, cloudPath.getFileSystem());
   }
 
   @Test
   void getRoot() {
-    final CloudFileSystem mockedFileSystem = mock(CloudFileSystem.class);
+    final CloudFileSystem<CloudHost> mockedFileSystem =
+        (CloudFileSystem<CloudHost>) mock(CloudFileSystem.class);
     final UnixPath rootUnixPath = UnixPath.ROOT_PATH;
-    final String host = "example.com";
-    final CloudPath rootCloudPath = new CloudPath(mockedFileSystem, rootUnixPath);
+    final CloudPath<CloudHost> rootCloudPath = new CloudPath<>(mockedFileSystem, rootUnixPath);
     final UnixPath childUnixPath = UnixPath.getPath("/pictures/2018/October/pumpkin.jpeg");
-    final CloudPath childCloudPath = new CloudPath(mockedFileSystem, childUnixPath);
+    final CloudPath<CloudHost> childCloudPath = new CloudPath<>(mockedFileSystem, childUnixPath);
     assertEquals(rootCloudPath, childCloudPath.getRoot());
   }
 
@@ -33,17 +34,21 @@ class CloudPathTest {
 
   @Test
   void resolve() {
-    final CloudFileSystem mockedFileSystem = mock(CloudFileSystem.class);
+    final CloudFileSystem<CloudHost> mockedFileSystem =
+        (CloudFileSystem<CloudHost>) mock(CloudFileSystem.class);
     final UnixPath originalUnixPath = UnixPath.getPath(("dir/my.txt"));
     final UnixPath resolvedUnixPath = UnixPath.getPath(("/users/shirin/dir/my.txt"));
     final UnixPath exampleUnixPath = UnixPath.getPath("/users/shirin");
-    final String host = "example.com";
-    final CloudPath originalCloudPath = new CloudPath(mockedFileSystem, originalUnixPath);
-    final CloudPath resolvedCloudPath = new CloudPath(mockedFileSystem, resolvedUnixPath);
-    final CloudPath exampleCloudPath = new CloudPath(mockedFileSystem, exampleUnixPath);
+    final CloudPath<CloudHost> originalCloudPath =
+        new CloudPath<>(mockedFileSystem, originalUnixPath);
+    final CloudPath<CloudHost> resolvedCloudPath =
+        new CloudPath<>(mockedFileSystem, resolvedUnixPath);
+    final CloudPath<CloudHost> exampleCloudPath =
+        new CloudPath<>(mockedFileSystem, exampleUnixPath);
     assertEquals(resolvedCloudPath, exampleCloudPath.resolve(originalCloudPath));
     final UnixPath badExampleUnixPath = UnixPath.getPath(("/users/kshakir"));
-    final CloudPath badExampleCloudPath = new CloudPath(mockedFileSystem, badExampleUnixPath);
+    final CloudPath<CloudHost> badExampleCloudPath =
+        new CloudPath<>(mockedFileSystem, badExampleUnixPath);
     assertNotEquals(badExampleCloudPath, exampleCloudPath.resolve((originalCloudPath)));
   }
 }
