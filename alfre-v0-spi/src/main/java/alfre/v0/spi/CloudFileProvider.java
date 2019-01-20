@@ -2,6 +2,9 @@ package alfre.v0.spi;
 
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.OpenOption;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface CloudFileProvider<CloudHostT extends CloudHost> {
@@ -23,14 +26,20 @@ public interface CloudFileProvider<CloudHostT extends CloudHost> {
   }
 
   default void copy(
-      final CloudPath<CloudHostT> sourceCloudPath, final CloudPath<CloudHostT> targetCloudPath)
+      final CloudPath<CloudHostT> sourceCloudPath,
+      final CloudPath<CloudHostT> targetCloudPath,
+      final Collection<? extends CopyOption> options)
       throws Exception {
     throw new UnsupportedOperationException(getClass() + " copying not supported");
   }
 
-  ReadableByteChannel read(CloudPath<CloudHostT> cloudPath, long offset) throws Exception;
+  ReadableByteChannel read(
+      CloudPath<CloudHostT> cloudPath, long offset, final Collection<? extends OpenOption> options)
+      throws Exception;
 
-  WritableByteChannel write(CloudPath<CloudHostT> cloudPath, long offset) throws Exception;
+  WritableByteChannel write(
+      CloudPath<CloudHostT> cloudPath, long offset, final Collection<? extends OpenOption> options)
+      throws Exception;
 
   boolean deleteIfExists(CloudPath<CloudHostT> cloudPath) throws Exception;
 

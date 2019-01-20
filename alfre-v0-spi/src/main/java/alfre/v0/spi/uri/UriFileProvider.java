@@ -8,6 +8,9 @@ import alfre.v0.spi.CloudRegularFileAttributes;
 import java.net.URI;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.OpenOption;
+import java.util.Collection;
 import java.util.Optional;
 
 @SuppressWarnings("WeakerAccess")
@@ -44,29 +47,43 @@ public abstract class UriFileProvider implements CloudFileProvider<UriHost> {
     return list(cloudPathPrefix.toUri(), marker);
   }
 
-  public abstract void copy(final URI sourceUri, final URI targetUri) throws Exception;
+  public abstract void copy(
+      final URI sourceUri, final URI targetUri, final Collection<? extends CopyOption> options)
+      throws Exception;
 
   @Override
   public final void copy(
-      final CloudPath<UriHost> sourceCloudPath, final CloudPath<UriHost> targetCloudPath)
+      final CloudPath<UriHost> sourceCloudPath,
+      final CloudPath<UriHost> targetCloudPath,
+      final Collection<? extends CopyOption> options)
       throws Exception {
-    copy(sourceCloudPath.toUri(), targetCloudPath.toUri());
+    copy(sourceCloudPath.toUri(), targetCloudPath.toUri(), options);
   }
 
-  public abstract ReadableByteChannel read(final URI uri, final long offset) throws Exception;
+  public abstract ReadableByteChannel read(
+      final URI uri, final long offset, final Collection<? extends OpenOption> options)
+      throws Exception;
 
   @Override
-  public final ReadableByteChannel read(final CloudPath<UriHost> cloudPath, final long offset)
+  public final ReadableByteChannel read(
+      final CloudPath<UriHost> cloudPath,
+      final long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception {
-    return read(cloudPath.toUri(), offset);
+    return read(cloudPath.toUri(), offset, options);
   }
 
-  public abstract WritableByteChannel write(final URI uri, final long offset) throws Exception;
+  public abstract WritableByteChannel write(
+      final URI uri, final long offset, final Collection<? extends OpenOption> options)
+      throws Exception;
 
   @Override
-  public final WritableByteChannel write(final CloudPath<UriHost> cloudPath, final long offset)
+  public final WritableByteChannel write(
+      final CloudPath<UriHost> cloudPath,
+      final long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception {
-    return write(cloudPath.toUri(), offset);
+    return write(cloudPath.toUri(), offset, options);
   }
 
   public abstract boolean deleteIfExists(final URI uri) throws Exception;

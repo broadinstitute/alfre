@@ -60,7 +60,7 @@
           <showWarnings>true</showWarnings>
           <compilerArgs>
             <arg>-Werror</arg>
-            <arg>-Xlint:all</arg>
+            <arg>-Xlint:all,-options</arg>
           </compilerArgs>
         </configuration>
       </plugin>
@@ -220,4 +220,25 @@
       </plugin>
     </plugins>
   </reporting>
+
+  <profiles>
+    <profile>
+      <id>java13+</id>
+      <activation>
+        <jdk>[13,)</jdk>
+      </activation>
+      <properties>
+        <!--
+        jacoco does not work with java 13 yet
+        check back in after https://github.com/jacoco/jacoco/issues/828
+        -->
+        <jacoco.skip>true</jacoco.skip>
+        <!--
+        spotbugs does not work on java 13 yet
+        "java.lang.IllegalArgumentException: Unsupported class file major version 57"
+        -->
+        <spotbugs.skip>true</spotbugs.skip>
+      </properties>
+    </profile>
+  </profiles>
 </project>

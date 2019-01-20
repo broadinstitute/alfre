@@ -7,19 +7,25 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
+import java.nio.file.OpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collection;
 
 @SuppressWarnings({"WeakerAccess", "Duplicates"})
 public class CloudReadChannel<CloudHostT extends CloudHost> implements SeekableByteChannel {
 
   private final CloudPath<CloudHostT> cloudPath;
+  private final Collection<? extends OpenOption> options;
 
   private long internalPosition;
   private ReadableByteChannel channel;
 
   /** Creates a new CloudReadChannel. */
-  public CloudReadChannel(final CloudPath<CloudHostT> cloudPath) throws IOException {
+  public CloudReadChannel(
+      final CloudPath<CloudHostT> cloudPath, final Collection<? extends OpenOption> options)
+      throws IOException {
     this.cloudPath = cloudPath;
+    this.options = options;
     channel = resetReadablePosition(0);
   }
 
@@ -35,7 +41,7 @@ public class CloudReadChannel<CloudHostT extends CloudHost> implements SeekableB
               () -> {
                 try {
                   if (resetConnection[0]) {
-                    channel = fileProvider.read(cloudPath, internalPosition);
+                    channel = fileProvider.read(cloudPath, internalPosition, options);
                   }
                   return channel.read(dst);
                 } catch (final Exception exception) {
@@ -84,7 +90,7 @@ public class CloudReadChannel<CloudHostT extends CloudHost> implements SeekableB
       final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
       final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
       final CloudRetry retry = fileSystem.getRetry();
-      return retry.runWithRetries(() -> fileProvider.read(cloudPath, newPosition));
+      return retry.runWithRetries(() -> fileProvider.read(cloudPath, newPosition, options));
     } catch (final CloudRetryException cloudRetryException) {
       throw cloudRetryException.getCauseIoException();
     }

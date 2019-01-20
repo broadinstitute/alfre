@@ -20,6 +20,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.spi.FileSystemProvider;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -42,9 +44,15 @@ public abstract class CloudFileSystemProvider<CloudHostT extends CloudHost>
   /** Creates a new CloudFileSystem for the URI. */
   public CloudFileSystem<CloudHostT> newFileSystem(
       final String uriAsString, final Map<String, ?> env) {
+    final CloudRetry retry = newRetry(env);
+    return newFileSystem(uriAsString, retry, env);
+  }
+
+  /** Creates a new CloudFileSystem for the URI. */
+  public CloudFileSystem<CloudHostT> newFileSystem(
+      final String uriAsString, final CloudRetry retry, final Map<String, ?> env) {
     final CloudHostT host = getHost(uriAsString, env);
     final CloudFileProvider<CloudHostT> cloudFileProvider = newFileProvider(env);
-    final CloudRetry retry = newRetry(env);
     return new CloudFileSystem<>(this, cloudFileProvider, host, retry);
   }
 
@@ -90,9 +98,9 @@ public abstract class CloudFileSystemProvider<CloudHostT extends CloudHost>
     if (options.contains(StandardOpenOption.READ) && options.contains(StandardOpenOption.WRITE)) {
       throw new UnsupportedOperationException("Cannot open a READ+WRITE channel");
     } else if (options.contains(StandardOpenOption.WRITE)) {
-      return new CloudWriteChannel<>(cloudPath);
+      return new CloudWriteChannel<>(cloudPath, options);
     } else {
-      return new CloudReadChannel<>(cloudPath);
+      return new CloudReadChannel<>(cloudPath, options);
     }
   }
 
@@ -149,10 +157,11 @@ public abstract class CloudFileSystemProvider<CloudHostT extends CloudHost>
       final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
       final CloudRetry retry = fileSystem.getRetry();
 
+      final Collection<CopyOption> optionsCollection = Arrays.asList(options);
       if (!Objects.equals(sourceCloudPath, targetCloudPath)) {
         retry.runWithRetries(
             () -> {
-              fileProvider.copy(sourceCloudPath, targetCloudPath);
+              fileProvider.copy(sourceCloudPath, targetCloudPath, optionsCollection);
               return null;
             });
       }
