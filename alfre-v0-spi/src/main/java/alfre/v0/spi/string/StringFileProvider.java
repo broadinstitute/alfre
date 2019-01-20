@@ -7,6 +7,9 @@ import alfre.v0.spi.CloudPath;
 import alfre.v0.spi.CloudRegularFileAttributes;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.OpenOption;
+import java.util.Collection;
 import java.util.Optional;
 
 public abstract class StringFileProvider implements CloudFileProvider<StringHost> {
@@ -43,40 +46,60 @@ public abstract class StringFileProvider implements CloudFileProvider<StringHost
         marker);
   }
 
-  public abstract ReadableByteChannel read(String cloudHost, String cloudPath, long offset)
+  public abstract ReadableByteChannel read(
+      String cloudHost,
+      String cloudPath,
+      long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception;
 
   @Override
-  public final ReadableByteChannel read(final CloudPath<StringHost> cloudPath, final long offset)
+  public final ReadableByteChannel read(
+      final CloudPath<StringHost> cloudPath,
+      final long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception {
-    return read(cloudPath.getCloudHost().getHost(), cloudPath.getAbsolutedPathAsString(), offset);
+    return read(
+        cloudPath.getCloudHost().getHost(), cloudPath.getAbsolutedPathAsString(), offset, options);
   }
 
-  public abstract WritableByteChannel write(String cloudHost, String cloudPath, long offset)
+  public abstract WritableByteChannel write(
+      String cloudHost,
+      String cloudPath,
+      long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception;
 
   @Override
-  public final WritableByteChannel write(final CloudPath<StringHost> cloudPath, final long offset)
+  public final WritableByteChannel write(
+      final CloudPath<StringHost> cloudPath,
+      final long offset,
+      final Collection<? extends OpenOption> options)
       throws Exception {
-    return write(cloudPath.getCloudHost().getHost(), cloudPath.getAbsolutedPathAsString(), offset);
+    return write(
+        cloudPath.getCloudHost().getHost(), cloudPath.getAbsolutedPathAsString(), offset, options);
   }
 
   public abstract void copy(
       final String sourceCloudHost,
       final String sourceCloudPath,
       final String targetCloudHost,
-      final String targetCloudPath)
+      final String targetCloudPath,
+      final Collection<? extends CopyOption> options)
       throws Exception;
 
   @Override
   public final void copy(
-      final CloudPath<StringHost> sourceCloudPath, final CloudPath<StringHost> targetCloudPath)
+      final CloudPath<StringHost> sourceCloudPath,
+      final CloudPath<StringHost> targetCloudPath,
+      final Collection<? extends CopyOption> options)
       throws Exception {
     copy(
         sourceCloudPath.getCloudHost().getHost(),
         sourceCloudPath.getAbsolutedPathAsString(),
         targetCloudPath.getCloudHost().getHost(),
-        targetCloudPath.getAbsolutedPathAsString());
+        targetCloudPath.getAbsolutedPathAsString(),
+        options);
   }
 
   public abstract boolean deleteIfExists(String cloudHost, String cloudPath) throws Exception;

@@ -9,7 +9,10 @@ import alfre.v0.util.ChannelUtil;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.OpenOption;
 import java.nio.file.attribute.FileTime;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 import software.amazon.awssdk.core.ResponseInputStream;
@@ -73,7 +76,11 @@ public class S3FileProvider extends StringFileProvider {
   }
 
   @Override
-  public ReadableByteChannel read(final String bucket, final String key, final long offset) {
+  public ReadableByteChannel read(
+      final String bucket,
+      final String key,
+      final long offset,
+      final Collection<? extends OpenOption> options) {
     final GetObjectRequest request;
     if (offset <= 0) {
       request = GetObjectRequest.builder().bucket(bucket).key(key).build();
@@ -86,7 +93,11 @@ public class S3FileProvider extends StringFileProvider {
   }
 
   @Override
-  public WritableByteChannel write(final String bucket, final String key, final long offset) {
+  public WritableByteChannel write(
+      final String bucket,
+      final String key,
+      final long offset,
+      final Collection<? extends OpenOption> options) {
     if (0 < offset) {
       throw new UnsupportedOperationException("Cannot resume uploads.");
     }
@@ -116,7 +127,8 @@ public class S3FileProvider extends StringFileProvider {
       final String sourceBucket,
       final String sourceKey,
       final String targetBucket,
-      final String targetKey) {
+      final String targetKey,
+      final Collection<? extends CopyOption> options) {
     /*
     In the original SDK these used to be passed as separate values.
     https://github.com/aws/aws-sdk-java/blob/1.11.354/aws-java-sdk-s3/src/main/java/com/amazonaws/services/s3/model/CopyObjectRequest.java#L50-L57

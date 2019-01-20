@@ -13,8 +13,11 @@ import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.CopyOption;
+import java.nio.file.OpenOption;
 import java.nio.file.attribute.FileTime;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -57,12 +60,15 @@ public class HttpFileProvider extends UriFileProvider {
   }
 
   @Override
-  public void copy(final URI sourceUri, final URI targetUri) {
+  public void copy(
+      final URI sourceUri, final URI targetUri, final Collection<? extends CopyOption> options) {
     throw new UnsupportedOperationException("copying not supported");
   }
 
   @Override
-  public ReadableByteChannel read(final URI uri, final long offset) throws Exception {
+  public ReadableByteChannel read(
+      final URI uri, final long offset, final Collection<? extends OpenOption> options)
+      throws Exception {
     final HttpGet request = new HttpGet(uri);
     if (0 < offset) {
       request.setHeader(HttpHeaders.RANGE, String.format("bytes=%s-", offset));
@@ -77,7 +83,9 @@ public class HttpFileProvider extends UriFileProvider {
   }
 
   @Override
-  public WritableByteChannel write(final URI uri, final long offset) throws Exception {
+  public WritableByteChannel write(
+      final URI uri, final long offset, final Collection<? extends OpenOption> options)
+      throws Exception {
     if (0 < offset) {
       throw new UnsupportedOperationException("Cannot resume uploads.");
     }

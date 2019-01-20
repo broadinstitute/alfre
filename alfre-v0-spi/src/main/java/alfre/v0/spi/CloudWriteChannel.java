@@ -6,18 +6,24 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NonReadableChannelException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.OpenOption;
+import java.util.Collection;
 
 @SuppressWarnings({"WeakerAccess", "Duplicates"})
 public class CloudWriteChannel<CloudHostT extends CloudHost> implements SeekableByteChannel {
 
   private final CloudPath<CloudHostT> cloudPath;
+  private final Collection<? extends OpenOption> options;
 
   private long internalPosition;
   private WritableByteChannel channel;
 
   /** Creates a new CloudWriteChannel. */
-  public CloudWriteChannel(final CloudPath<CloudHostT> cloudPath) throws IOException {
+  public CloudWriteChannel(
+      final CloudPath<CloudHostT> cloudPath, final Collection<? extends OpenOption> options)
+      throws IOException {
     this.cloudPath = cloudPath;
+    this.options = options;
     channel = resetWritablePosition(0);
   }
 
@@ -38,7 +44,7 @@ public class CloudWriteChannel<CloudHostT extends CloudHost> implements Seekable
               () -> {
                 try {
                   if (resetConnection[0]) {
-                    channel = fileProvider.write(cloudPath, internalPosition);
+                    channel = fileProvider.write(cloudPath, internalPosition, options);
                   }
                   return channel.write(src);
                 } catch (final Exception exception) {
@@ -82,7 +88,7 @@ public class CloudWriteChannel<CloudHostT extends CloudHost> implements Seekable
       final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
       final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
       final CloudRetry retry = fileSystem.getRetry();
-      return retry.runWithRetries(() -> fileProvider.write(cloudPath, newPosition));
+      return retry.runWithRetries(() -> fileProvider.write(cloudPath, newPosition, options));
     } catch (final CloudRetryException cloudRetryException) {
       throw cloudRetryException.getCauseIoException();
     }
