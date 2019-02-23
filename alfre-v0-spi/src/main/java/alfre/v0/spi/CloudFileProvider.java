@@ -3,7 +3,9 @@ package alfre.v0.spi;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.CopyOption;
+import java.nio.file.LinkOption;
 import java.nio.file.OpenOption;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -45,4 +47,11 @@ public interface CloudFileProvider<CloudHostT extends CloudHost> {
 
   Optional<CloudRegularFileAttributes> fileAttributes(CloudPath<CloudHostT> cloudPath)
       throws Exception;
+
+  @SuppressWarnings({"unused", "RedundantThrows"})
+  default Path toRealPath(
+      final CloudPath<CloudHostT> cloudPath, final Collection<? extends LinkOption> options)
+      throws Exception {
+    return cloudPath.toAbsolutePath();
+  }
 }

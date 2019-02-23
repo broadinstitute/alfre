@@ -252,14 +252,14 @@ public abstract class CloudFileSystemProvider<CloudHostT extends CloudHost>
       return (A) attributes;
     }
 
-    final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
-    final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
-    final CloudRetry retry = fileSystem.getRetry();
-
     if (checkDirectoryExists(cloudPath)) {
       return (A) CloudPseudoDirectoryAttributes.INSTANCE;
     } else {
       try {
+        final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+        final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+        final CloudRetry retry = fileSystem.getRetry();
+
         return (A)
             retry
                 .runWithRetries(() -> fileProvider.fileAttributes(cloudPath))
@@ -280,6 +280,25 @@ public abstract class CloudFileSystemProvider<CloudHostT extends CloudHost>
   public void setAttribute(
       final Path path, final String attribute, final Object value, final LinkOption... options) {
     throw new UnsupportedOperationException();
+  }
+
+  /**
+   * Returns the <em>real</em> path of an existing file.
+   *
+   * @see Path#toRealPath(java.nio.file.LinkOption...)
+   */
+  public Path toRealPath(final CloudPath<CloudHostT> cloudPath, final LinkOption... options)
+      throws IOException {
+    try {
+      final CloudFileSystem<CloudHostT> fileSystem = cloudPath.getFileSystem();
+      final CloudFileProvider<CloudHostT> fileProvider = fileSystem.getFileProvider();
+      final CloudRetry retry = fileSystem.getRetry();
+      final Collection<LinkOption> optionsCollection = Arrays.asList(options);
+
+      return retry.runWithRetries(() -> fileProvider.toRealPath(cloudPath, optionsCollection));
+    } catch (final CloudRetryException cloudRetryException) {
+      throw cloudRetryException.getCauseIoException();
+    }
   }
 
   private boolean checkDirectoryExists(final CloudPath<CloudHostT> cloudPath) throws IOException {
