@@ -1,6 +1,7 @@
 package alfre.v0.spi;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.LinkOption;
@@ -234,8 +235,8 @@ public class CloudPath<CloudHostT extends CloudHost> implements Path {
   }
 
   @Override
-  public CloudPath<CloudHostT> toRealPath(final LinkOption... options) {
-    return toAbsolutePath();
+  public Path toRealPath(final LinkOption... options) throws IOException {
+    return this.fileSystem.provider().toRealPath(this, options);
   }
 
   @Override

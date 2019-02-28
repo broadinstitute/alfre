@@ -11,10 +11,9 @@ import java.util.Objects;
 public class CloudPaths {
 
   /**
-   * Parses a path in a way reciprocal with
-   * [[cloud.nio.util.CloudNioPaths#showAbsolute(java.nio.file.Path)]].
+   * Parses a path in a way reciprocal with {@link #toAbsoluteString toAbsoluteString}.
    *
-   * @see alfre.v0.util.CloudPaths#showAbsolute(java.nio.file.Path)
+   * @see alfre.v0.util.CloudPaths#toAbsoluteString(java.nio.file.Path)
    * @see alfre.v0.spi.CloudPath#getUriAsString()
    */
   public static Path get(final String filePath) {
@@ -34,13 +33,13 @@ public class CloudPaths {
   }
 
   /**
-   * Return a path in a way reciprocal with [[cloud.nio.util.CloudNioPaths#get]].
+   * Return a path in a way reciprocal with {@link alfre.v0.util.CloudPaths#get get}.
    *
    * @see alfre.v0.util.CloudPaths#get(java.lang.String)
-   * @see alfre.v0.util.CloudPaths#showRelative(java.nio.file.Path)
+   * @see alfre.v0.util.CloudPaths#toRelativeString(java.nio.file.Path)
    * @see alfre.v0.spi.CloudPath#getUriAsString()
    */
-  public static String showAbsolute(final Path path) {
+  public static String toAbsoluteString(final Path path) {
     Objects.requireNonNull(path, "path is null");
     if (path instanceof CloudPath<?>) {
       final CloudPath<?> cloudPath = (CloudPath<?>) path;
@@ -51,14 +50,16 @@ public class CloudPaths {
   }
 
   /**
-   * When the path is relative returns a relative path in a way reciprocal with resolve. If the path
-   * is absolute then it is returned as relative but including the host/bucket.
+   * When the path is relative returns a relative path in a way reciprocal with {@link
+   * java.nio.file.Path#resolve resolve}.
    *
-   * @see alfre.v0.util.CloudPaths#showAbsolute(java.nio.file.Path)
+   * <p>If the path is absolute then it is returned as relative but including the host/bucket.
+   *
+   * @see alfre.v0.util.CloudPaths#toAbsoluteString(java.nio.file.Path)
    * @see java.nio.file.Path#resolve(java.nio.file.Path)
    * @see alfre.v0.spi.CloudPath#getUriAsString()
    */
-  public static String showRelative(final Path path) {
+  public static String toRelativeString(final Path path) {
     Objects.requireNonNull(path, "path is null");
     if (path instanceof CloudPath<?>) {
       final CloudPath<?> cloudPath = (CloudPath<?>) path;

@@ -70,12 +70,12 @@ public class MainRunner implements Runner {
         final String[] columns = {
           String.valueOf(attributes.size()),
           String.valueOf(attributes.lastModifiedTime()),
-          CloudPaths.showAbsolute(path),
+          CloudPaths.toAbsoluteString(path),
           attributes.fileHash() == null ? "" : attributes.fileHash(),
         };
         System.out.println(String.join("\t", columns));
       } else {
-        System.out.println(CloudPaths.showAbsolute(path));
+        System.out.println(CloudPaths.toAbsoluteString(path));
       }
       return false;
     } catch (final Exception exception) {
@@ -102,7 +102,7 @@ public class MainRunner implements Runner {
         System.out.println(
             String.format(
                 "%s -> %s",
-                CloudPaths.showAbsolute(sourcePath), CloudPaths.showAbsolute(targetPath)));
+                CloudPaths.toAbsoluteString(sourcePath), CloudPaths.toAbsoluteString(targetPath)));
       }
       if (cpOptions.isDoModifications()) {
         final Path parent = targetPath.getParent();
@@ -132,7 +132,7 @@ public class MainRunner implements Runner {
   private static boolean runRmPath(final RmOptions rmOptions, final Path path) {
     try {
       if (!rmOptions.isDoModifications() || rmOptions.getVerbosity() == Verbosity.VERBOSE) {
-        System.out.println(CloudPaths.showAbsolute(path));
+        System.out.println(CloudPaths.toAbsoluteString(path));
       }
       if (rmOptions.isDoModifications()) {
         Files.deleteIfExists(path);

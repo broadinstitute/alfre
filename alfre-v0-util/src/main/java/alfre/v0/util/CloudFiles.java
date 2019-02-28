@@ -19,7 +19,7 @@ public class CloudFiles {
   /** Lists all files under a path. */
   public static Stream<PathPair> relativeFiles(final Path sourcePath, final Path targetPath)
       throws IOException {
-    return relativeFiles(sourcePath, targetPath, CloudPaths::showRelative);
+    return relativeFiles(sourcePath, targetPath, CloudPaths::toRelativeString);
   }
 
   /** Returns all regular files under sourcePath mapped relatively to targetPath. */
